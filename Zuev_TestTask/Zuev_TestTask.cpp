@@ -2,10 +2,22 @@
 //
 
 #include <iostream>
+#include "ListSerializer.h"
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    ListSerializer ls;
+    ListNode* head = ls.LoadFromText("inlet.in");
+    ls.Serialize(head, "outlet.out");
+    ListNode* newHead = ls.Deserialize("outlet.out");
+    ListNode* restoredHead = ls.Deserialize("outlet.out");
+    if (restoredHead) {
+        std::cout << "Restored data: " << restoredHead->data << std::endl; //проверка
+    }
+
+    ls.Clear(head); //очистка
+    ls.Clear(newHead);
+    return 0;
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
