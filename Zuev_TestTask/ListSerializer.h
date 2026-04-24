@@ -7,7 +7,6 @@
 
 class ListSerializer {
 public:
-    // Главный метод сохранения
     void Serialize(ListNode* head, const std::string& filepath) {
         std::ofstream os(filepath, std::ios::binary);
         if (!os) return;
@@ -21,7 +20,6 @@ public:
         }
     }
 
-    // Главный метод загрузки
     ListNode* Deserialize(const std::string& filepath) {
         std::ifstream is(filepath, std::ios::binary);
         if (!is) return nullptr;
@@ -41,8 +39,6 @@ public:
     }
 
 private:
-    // --- Вспомогательные методы для Сериализации ---
-
     std::vector<ListNode*> EnumerateList(ListNode* head) {
         std::vector<ListNode*> nodes;
         for (auto* curr = head; curr; curr = curr->next) {
@@ -104,5 +100,73 @@ private:
         uint32_t s = 0;
         is.read(reinterpret_cast<char*>(&s), sizeof(s));
         return static_cast<size_t>(s);
+    }
+
+    public:
+        ListNode* LoadFromText(const std::string& filepath) {
+            std::ifstream is(filepath);
+            if (!is) return nullptr;
+
+            auto rawData = ReadLines(is);
+            if (rawData.empty()) return nullptr;
+
+            std::vector<ListNode*> nodes = CreateRawNodes(rawData);
+            LinkNodes(nodes, rawData);
+
+            return nodes.front();
+        }
+
+private:
+    struct RawNode {
+        std::string data;
+        int randIdx;
+    };
+
+    std::vector<RawNode> ReadLines(std::ifstream& is) {
+        std::vector<RawNode> result;
+        std::string line;
+
+        while (std::getline(is, line)) {
+            size_t sep = line.find_last_of(';');
+            if (sep != std::string::npos) {
+                result.push_back({
+                    line.substr(0, sep),
+                    std::stoi(line.substr(sep + 1))
+                    });
+            }
+        }
+        return result;
+    }
+
+    std::vector<ListNode*> CreateRawNodes(const std::vector<RawNode>& data) {
+        std::vector<ListNode*> nodes;
+        nodes.reserve(data.size());
+        for (const auto& item : data) {
+            ListNode* node = new ListNode();
+            node->data = item.data;
+            nodes.push_back(node);
+        }
+        return nodes;
+    }
+
+    void LinkNodes(std::vector<ListNode*>& nodes, const std::vector<RawNode>& rawData) {
+        for (size_t i = 0; i < nodes.size(); ++i) {
+            if (i > 0) nodes[i]->prev = nodes[i - 1];
+            if (i < nodes.size() - 1) nodes[i]->next = nodes[i + 1];
+
+            int rIdx = rawData[i].randIdx;
+            if (rIdx >= 0 && rIdx < static_cast<int>(nodes.size())) {
+                nodes[i]->rand = nodes[rIdx];
+            }
+        }
+    }
+
+public:
+    void Clear(ListNode* head) {
+        while (head) {
+            ListNode* temp = head;
+            head = head->next;
+            delete temp;
+        }
     }
 };
